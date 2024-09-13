@@ -58,7 +58,8 @@ public class HttpAuthHandlerTests
         var token = new JwtAccessToken()
         {
             TokenType = HttpAuthHandler.DpopSchemeType,
-            AccessToken = AuthServerTestHandler.ExpectedJwt
+            AccessToken = AuthServerTestHandler.ExpectedJwt,
+            CanFallbackToBearerToken = true
         };
 
         var client = CreateClientWithHandler(token, enableDpopOnServer: false);

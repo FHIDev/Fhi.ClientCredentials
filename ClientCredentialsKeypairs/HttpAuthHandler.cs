@@ -48,7 +48,7 @@ namespace Fhi.ClientCredentialsKeypairs
 
             var dpopResponse = await base.SendAsync(request, cancellationToken);
 
-            if (dpopResponse.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            if (token.CanFallbackToBearerToken && dpopResponse.StatusCode == System.Net.HttpStatusCode.Unauthorized)
             {
                 var supportedSchemes = dpopResponse.Headers.WwwAuthenticate.Select(x => x.Scheme).ToArray();
 

@@ -95,7 +95,7 @@ public class AuthenticationService : IAuthenticationService
             return new JwtAccessToken()
             {
                 AccessToken = _accessToken,
-                TokenType = "Bearer",
+                TokenType = "Bearer"
             };
         }
 
@@ -106,6 +106,7 @@ public class AuthenticationService : IAuthenticationService
             AccessToken = _accessToken,
             TokenType = "DPoP",
             DpopProof = BuildDpopAssertion(method, url, _jti, ath: ath),
+            CanFallbackToBearerToken = Config.CanFallbackToBearerToken
         };
     }
 
@@ -195,4 +196,5 @@ public class JwtAccessToken()
     public string TokenType { get; set; } = "";
 
     public string? DpopProof { get; set; }
+    public bool CanFallbackToBearerToken { get; set; }
 }

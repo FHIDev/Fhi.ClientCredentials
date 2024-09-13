@@ -20,6 +20,14 @@ public partial class ClientCredentialsConfiguration
     /// </summary>
     public bool UseDpop { get; set; } = false;
 
+    /// <summary>
+    /// Indicates if authentication towards API-endpoints can fallback
+    /// to Bearer tokens in the event they do not support DPoP tokens.
+    /// This is to ensure backwards compatibility with existing endpoints
+    /// and is disabled by default.
+    /// </summary>
+    public bool CanFallbackToBearerToken { get; set; } = false;
+
     public List<Api> Apis { get; set; } = new();
 
     public Uri UriToApiByName(string name)
