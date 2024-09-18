@@ -1,5 +1,6 @@
 ﻿using Fhi.ClientCredentialsKeypairs.Tests.Mocks;
 using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Cryptography;
 using System.Text.Json;
 
@@ -25,6 +26,22 @@ public class AuthenticationServiceTests
 
         var token = service.GetAccessToken(HttpMethod.Get, "https://test/help");
         Assert.That(token.AccessToken, Is.EqualTo("DpopToken"));
+    }
+
+    [Test]
+    public async Task DpopTokenIsSha256Base64UrlEncoded()
+    {
+        var service = GetAuthenticationService(clientUseDpop: true, serverUseDpop: true);
+        await service.SetupToken();
+
+        var token = service.GetAccessToken(HttpMethod.Get, "https://test/help");
+        var handler = new JwtSecurityTokenHandler();
+        var dpopProof = (JwtSecurityToken)handler.ReadToken(token.DpopProof);
+
+        var dpopAthClaim = dpopProof.Claims.Where(t => t.Type == "ath").Single();
+
+        // Assert that the calculated ath claim value is a base64 url encoded value of the sha256 of the access token
+        Assert.That(dpopAthClaim.Value, Is.EqualTo("YdX4GGm956hxYFopv8SFiwpL9d0bg4-qhVAWT0s5PBs"));
     }
 
     [Test]
