@@ -1,10 +1,8 @@
 ﻿## Client Credentials Usage
 
-
 ## Configuration file section
 
 1. Add the following configuration section to your appsettings.json files, and populate it appropriately.
-
 
 ```json
   "ClientCredentialsConfiguration": {
@@ -27,7 +25,7 @@
   }
 ```
 
-
+PS:  Please be aware that the Authority must end with `connect/token`.  
 
 ## Client Credentials using Keypairs
 
@@ -77,3 +75,21 @@ If you want to disable the authorization for some reason, you can add another pr
 3. In your `Program.cs` file, create an instance of the `ClientCredentialsSetup` class using an `IConfiguration` parameter.
 4. Using the created instance call the method `ConfigureServices`.
 
+## Calling endpoints that does not required authentication
+
+In some cases we might wish to call an API before we are authenticated (health endpoints, kodeverk, etc..).
+
+To make the HttpAuthHandler not add authentication headers to a single request you can add an Option
+to the request with the key name "Anonymous":
+
+```
+var request = new HttpRequestMessage();
+request.Options.TryAdd("Anonymous", "");
+```
+
+or in Refit:
+
+```
+[Get("/info")]
+Task<string> GetInfo([Property("Anonymous")] string anonymous = "");
+```
