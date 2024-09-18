@@ -118,7 +118,7 @@ public class AuthenticationService : IAuthenticationService
         using var encryptor = SHA256.Create();
         var input = Encoding.ASCII.GetBytes(accessToken);
         var sha256 = encryptor.ComputeHash(input);
-        return Convert.ToBase64String(sha256);
+        return Base64UrlEncoder.Encode(sha256);
     }
 
     /// <summary>
