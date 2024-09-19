@@ -7,7 +7,7 @@ namespace Fhi.ClientCredentialsKeypairs.Tests.Mocks;
 
 public class OauthTestServerHandler : HttpMessageHandler
 {
-    private Dictionary<string, string> _jtiToNonce = new();
+    private HashSet<string> _usedJtis = new();
 
     public bool EnableDpop { get; set; } = false;
 
@@ -45,14 +45,17 @@ public class OauthTestServerHandler : HttpMessageHandler
         if (string.IsNullOrWhiteSpace(givenNonce))
         {
             var val = Guid.NewGuid().ToString();
-            _jtiToNonce.Add(jti, val);
+            _usedJtis.Add(jti);
             return CreateResult("error", OidcConstants.TokenErrors.UseDPoPNonce, val);
         }
 
-        if (!_jtiToNonce.ContainsKey(jti) || givenNonce != _jtiToNonce[jti])
+        // jtis must be unique per call to prevent dpop replay attacks
+        if (_usedJtis.Contains(jti))
         {
             return CreateResult("error", "invalid_nonce");
         }
+
+        _usedJtis.Add(jti);
 
         return CreateResult(OidcConstants.TokenResponse.AccessToken, "DpopToken");
     }
