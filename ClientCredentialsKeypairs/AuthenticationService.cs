@@ -41,20 +41,13 @@ public class AuthenticationService : IAuthenticationService
 
     private string _accessToken { get; set; } = "";
 
-    /// <summary>
-    /// The jti claim must be a unique value that identifies this particular JWT.
-    /// </summary>
-    private string _jti { get; set; } = "";
-
     public async Task SetupToken()
     {
-        _jti = Guid.NewGuid().ToString();
-
         var cctr = new ClientCredentialsTokenRequest
         {
             Address = Config.Authority,
             ClientId = Config.ClientId,
-            DPoPProofToken = Config.UseDpop ? BuildDpopAssertion(HttpMethod.Post, Config.Authority, _jti) : null,
+            DPoPProofToken = Config.UseDpop ? BuildDpopAssertion(HttpMethod.Post, Config.Authority) : null,
             GrantType = OidcConstants.GrantTypes.ClientCredentials,
             ClientCredentialStyle = ClientCredentialStyle.PostBody,
             Scope = Config.Scopes,
@@ -70,7 +63,7 @@ public class AuthenticationService : IAuthenticationService
         {
             if (Config.UseDpop && response.Error == OidcConstants.TokenErrors.UseDPoPNonce)
             {
-                cctr.DPoPProofToken = BuildDpopAssertion(HttpMethod.Post, Config.Authority, _jti, nonce: response.DPoPNonce ?? Guid.NewGuid().ToString());
+                cctr.DPoPProofToken = BuildDpopAssertion(HttpMethod.Post, Config.Authority, nonce: response.DPoPNonce ?? Guid.NewGuid().ToString());
                 response = await Client.RequestClientCredentialsTokenAsync(cctr);
             }
 
@@ -105,7 +98,7 @@ public class AuthenticationService : IAuthenticationService
         {
             AccessToken = _accessToken,
             TokenType = "DPoP",
-            DpopProof = BuildDpopAssertion(method, url, _jti, ath: ath),
+            DpopProof = BuildDpopAssertion(method, url, ath: ath),
             CanFallbackToBearerToken = Config.CanFallbackToBearerToken
         };
     }
@@ -124,13 +117,13 @@ public class AuthenticationService : IAuthenticationService
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="jti">Unique identifier for the DPoP originally used against HelseId</param>
     /// <param name="nonce">Unique id provided by HelseId upon request. Only used during request to HelseId</param>
     /// <param name="ath">Hash of the AccessToken. Only used when making request to an API with an AccessToken.</param>
     /// <returns></returns>
-    private string BuildDpopAssertion(HttpMethod method, string url, string jti, string? nonce = null, string? ath = null)
+    private string BuildDpopAssertion(HttpMethod method, string url, string? nonce = null, string? ath = null)
     {
         var iat = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
+        var jti = Guid.NewGuid().ToString();
 
         var claims = new List<Claim>
         {
