@@ -1,5 +1,4 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -167,7 +166,7 @@ public class AuthenticationService : IAuthenticationService
             { JsonWebKeyParameterNames.N, jwk.N }
         }
         .Where(kvp => !string.IsNullOrEmpty(kvp.Value))
-        .ToDictionary();
+        .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
     }
 
     private string BuildClientAssertion(string audience, string clientId)
