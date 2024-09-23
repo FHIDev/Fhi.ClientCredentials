@@ -148,15 +148,25 @@ public class AuthenticationService : IAuthenticationService
         var jwtSecurityToken = new JwtSecurityToken(claims: claims, signingCredentials: signingCredentials);
         jwtSecurityToken.Header.Remove("typ");
         jwtSecurityToken.Header.Add("typ", "dpop+jwt");
-        jwtSecurityToken.Header.Add("jwk", GetPublicJwk());
+        var jwkValue = GetPublicJwk();
+        jwtSecurityToken.Header.Add("jwk", jwkValue);
 
         var token = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
         return token;
     }
 
-    private JsonWebKey GetPublicJwk()
+    private Dictionary<string, string> GetPublicJwk()
     {
-        return new JsonWebKey(Config.PrivateKey).GetPublicKey();
+        var jwk = new JsonWebKey(Config.PrivateKey);
+        return new Dictionary<string, string>
+        {
+            { JsonWebKeyParameterNames.Alg, jwk.Alg },
+            { JsonWebKeyParameterNames.E, jwk.E },
+            { JsonWebKeyParameterNames.Kty, jwk.Kty },
+            { JsonWebKeyParameterNames.N, jwk.N }
+        }
+        .Where(kvp => !string.IsNullOrEmpty(kvp.Value))
+        .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
     }
 
     private string BuildClientAssertion(string audience, string clientId)
