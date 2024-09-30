@@ -114,7 +114,8 @@ List<string> GetDefaultFiles(string path)
 
 Task<string> GetToken(ClientCredentialsConfiguration config)
 {
-	var store = new AuthenticationService(config);
+	var api = config.Apis.First();
+	var store = new AuthenticationService(config, api);
 	var tokenProvider = new AuthenticationStore(store, Options.Create(config));
 	return tokenProvider.GetToken();
 }

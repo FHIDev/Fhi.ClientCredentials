@@ -45,6 +45,7 @@ public partial class RefitClientCredentialsBuilderTests
 
         var config = new ClientCredentialsConfiguration()
         {
+            clientId = "clientId",
             Apis = new List<Api>() { new() { Url = "http://localhost", Name = "ITestClient" } }
         };
 

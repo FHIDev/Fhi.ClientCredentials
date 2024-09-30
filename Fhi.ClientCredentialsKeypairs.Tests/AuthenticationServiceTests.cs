@@ -68,13 +68,17 @@ public class AuthenticationServiceTests
     {
         var client = new HttpClient(new OauthTestServerHandler() { EnableDpop = serverUseDpop });
 
+        var api = new Api
+        {
+            UseDpop = clientUseDpop,
+        };
+
         var service = new AuthenticationService(client, new ClientCredentialsConfiguration()
         {
             authority = "https://test/oauth",
             clientId = "TEST",
-            privateJwk = CreateJsonPrivateJwk(),
-            UseDpop = clientUseDpop,
-        });
+            privateJwk = CreateJsonPrivateJwk()
+        }, api);
 
         return service;
     }

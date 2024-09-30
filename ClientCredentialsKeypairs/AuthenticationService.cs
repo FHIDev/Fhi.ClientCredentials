@@ -24,16 +24,20 @@ public class AuthenticationService : IAuthenticationService
 
     public HttpClient Client { get; }
 
-    public AuthenticationService(ClientCredentialsConfiguration config)
+    public Api Api { get; }
+
+    public AuthenticationService(ClientCredentialsConfiguration config, Api api)
     {
         Config = config;
         Client = new HttpClient();
+        Api = api;
     }
 
-    public AuthenticationService(HttpClient client, ClientCredentialsConfiguration config)
+    public AuthenticationService(HttpClient client, ClientCredentialsConfiguration config, Api api)
     {
         Config = config;
         Client = client;
+        Api = api;
     }
 
     [Obsolete("Use GetAccessToken(HttpMethod method, string url)")]
@@ -47,7 +51,7 @@ public class AuthenticationService : IAuthenticationService
         {
             Address = Config.Authority,
             ClientId = Config.ClientId,
-            DPoPProofToken = Config.UseDpop ? BuildDpopAssertion(HttpMethod.Post, Config.Authority) : null,
+            DPoPProofToken = Api.UseDpop ? BuildDpopAssertion(HttpMethod.Post, Config.Authority) : null,
             GrantType = OidcConstants.GrantTypes.ClientCredentials,
             ClientCredentialStyle = ClientCredentialStyle.PostBody,
             Scope = Config.Scopes,
@@ -61,7 +65,7 @@ public class AuthenticationService : IAuthenticationService
         var response = await Client.RequestClientCredentialsTokenAsync(cctr);
         if (response.IsError)
         {
-            if (Config.UseDpop && response.Error == OidcConstants.TokenErrors.UseDPoPNonce)
+            if (Api.UseDpop && response.Error == OidcConstants.TokenErrors.UseDPoPNonce)
             {
                 cctr.DPoPProofToken = BuildDpopAssertion(HttpMethod.Post, Config.Authority, nonce: response.DPoPNonce ?? Guid.NewGuid().ToString());
                 response = await Client.RequestClientCredentialsTokenAsync(cctr);
@@ -83,7 +87,7 @@ public class AuthenticationService : IAuthenticationService
             throw new Exception("No access token is set. Unable to create Dpop Proof.");
         }
 
-        if (!Config.UseDpop)
+        if (!Api.UseDpop)
         {
             return new JwtAccessToken()
             {

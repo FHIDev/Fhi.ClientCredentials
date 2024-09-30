@@ -27,7 +27,9 @@ namespace Fhi.ClientCredentialsKeypairs
             if (clientCredentialsConfiguration == null)
                 throw new ConfigurationException("Missing configuration: ClientCredentialsConfiguration");
             services.Configure<ClientCredentialsConfiguration>(configuration.GetSection(nameof(ClientCredentialsConfiguration)));
-            services.AddTransient<IAuthenticationService>(_ => new AuthenticationService(clientCredentialsConfiguration));
+
+            services.AddSingleton<IAuthTokenStoreFactory, AuthTokenStoreFactory>();
+            services.AddSingleton<ITokenStoreResolver, TokenStoreResolver>();
             services.AddSingleton<IAuthTokenStore, AuthenticationStore>();
             services.AddTransient<HttpAuthHandler>();
             return clientCredentialsConfiguration;
@@ -43,6 +45,12 @@ namespace Fhi.ClientCredentialsKeypairs
                 WriteIndented = true,
             };
             return jsonSerializerOptions;
+        }
+
+        public static IHttpClientBuilder AddDefaultAuthHandler<THandler>(this IHttpClientBuilder builder, Api api)
+        {
+            return builder.AddHttpMessageHandler((s) => new HttpAuthHandler(
+                s.GetRequiredService<ITokenStoreResolver>().GetStoreForApi(api)));
         }
     }
 }
