@@ -47,6 +47,7 @@ public class AuthenticationService : IAuthenticationService
 
     public async Task SetupToken()
     {
+        var scopes = string.IsNullOrEmpty(Api.Scope) ? Config.Scopes : Api.Scope;
         var cctr = new ClientCredentialsTokenRequest
         {
             Address = Config.Authority,
@@ -54,7 +55,7 @@ public class AuthenticationService : IAuthenticationService
             DPoPProofToken = Api.UseDpop ? BuildDpopAssertion(HttpMethod.Post, Config.Authority) : null,
             GrantType = OidcConstants.GrantTypes.ClientCredentials,
             ClientCredentialStyle = ClientCredentialStyle.PostBody,
-            Scope = Config.Scopes,
+            Scope = scopes,
             ClientAssertion = new ClientAssertion
             {
                 Type = OidcConstants.ClientAssertionTypes.JwtBearer,

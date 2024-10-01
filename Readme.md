@@ -1,4 +1,47 @@
-﻿## Client Credentials Usage
+﻿# Whats new in 3.0
+
+## Breaking changes
+
+If you use HttpClientFactory, use `AddDefaultAuthHandler()` instead of adding a `HttpAuthHandler`. Refactor this:
+
+```csharp
+services.AddHttpClient(api.Name, c =>
+{
+    c.BaseAddress = clientCredentialsConfiguration.UriToApiByName(api.Name);
+})
+.AddHttpMessageHandler<HttpAuthHandler>();
+```
+to this:
+
+```csharp
+
+var apiConfiguration = clientCredentialsConfiguration.GetApi(api.Name);
+services.AddHttpClient(api.Name, c =>
+{
+    c.BaseAddress = new Uri(apiConfiguration.Url);
+})
+.AddDefaultAuthHandler(apiConfiguration);
+```
+
+## New features
+
+Scopes and DPoP-configuration can now be set per API:
+
+```json
+"ClientCredentialsConfiguration": {
+  "Apis": [
+    {
+      "Name": "IGrunndataClient",
+      "Url": "https://localhost:5001",
+      "Scope": "fhi:grunndata.personoppslagapi/sysvak", // <-- new! (you might have had this here before, but it was never used)
+      "UseDpop": true // <-- new! (this is false by default)
+    }
+  ],
+```
+
+If no scope is set per API, it will default back to the scopes list set in `ClientCredentialsConfiguration`. Make sure your API calls get the correct scopes after upgrading.
+
+# Client Credentials Usage
 
 ## Configuration file section
 
@@ -18,7 +61,8 @@
     "Apis": [
       {
         "Name": "", // Tip:  Use nameof(YourService)
-        "Url": ""
+        "Url": "",
+        "Scope": ""
       }
     ],
     "refreshTokenAfterMinutes":  8  // Set approx 20% less than lifetime of access token
@@ -35,12 +79,13 @@ PS:  Please be aware that the Authority must end with `connect/token`.
 
 ```cs
     var clientCredentialsConfiguration = services.AddClientCredentialsKeypairs(Configuration);
+    var apiConfiguration = clientCredentialsConfiguration.GetApi(nameof(YourService));
     services.AddHttpClient(nameof(YourService), c =>
     {
        c.Timeout = new TimeSpan(0, 0, 0, 10);
-       c.BaseAddress = clientCredentialsConfiguration.UriToApiByName(nameof(YourService));
+       c.BaseAddress = new Uri(apiConfiguration.Url);
     })
-    .AddHttpMessageHandler<HttpAuthHandler>()
+    .AddDefaultAuthHandler(apiConfiguration)
     .AddTypedClient(c => RestService.For<IExternalApi>(c, new RefitSettings
     {
        ContentSerializer = new SystemTextJsonContentSerializer(services.DefaultJsonSerializationOptions())
@@ -55,9 +100,9 @@ services
     .AddRefitClient<IMyService>()
     .ConfigureHttpClient(c =>
     {
-        c.BaseAddress = clientCredentialsConfiguration.UriToApiByName(nameof(IMyService));
+        c.BaseAddress = new Uri(apiConfiguration.Url);
     })
-    .AddHttpMessageHandler<HttpAuthHandler>();
+    .AddDefaultAuthHandler(apiConfiguration);
 ```
 
 The `Configuration` property is the injected IConfiguration property from the Startup.cs file.

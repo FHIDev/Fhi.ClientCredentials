@@ -45,4 +45,10 @@ public class Api
     /// https://utviklerportal.nhn.no/informasjonstjenester/helseid/bruksmoenstre-og-eksempelkode/bruk-av-helseid/docs/dpop/dpop_no_nbmd/
     /// </summary>
     public bool UseDpop { get; set; } = false;
+
+    /// <summary>
+    /// The scope that the client will use towards the specific API. Multiple scopes can be set with space after each scope.
+    /// If this property is not set, the scopes defined in the ClientCredentialsConfiguration will be used instead.
+    /// </summary>
+    public string? Scope { get; set; }
 }
