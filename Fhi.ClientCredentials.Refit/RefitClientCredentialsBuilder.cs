@@ -25,15 +25,11 @@ public class RefitClientCredentialsBuilder
         builderOptions = options ?? new RefitClientCredentialsBuilderOptions();
         clientCredentialsConfig = config;
 
-        services.AddTransient<IAuthenticationService>(_ => new AuthenticationService(config));
-        services.AddSingleton<IAuthTokenStore, AuthenticationStore>();
-
+        services.AddSingleton(config);
         services.AddSingleton(builderOptions);
+        services.AddSingleton<IAuthTokenStoreFactory, AuthTokenStoreFactory>();
+        services.AddSingleton<ITokenStoreResolver, TokenStoreResolver>();
 
-        if (builderOptions.UseDefaultTokenHandler)
-        {
-            AddHandler<HttpAuthHandler>();
-        }
         if (builderOptions.HtmlEncodeFhiHeaders)
         {
             AddHandler<FhiHeaderDelegationHandler>();
@@ -74,15 +70,24 @@ public class RefitClientCredentialsBuilder
     /// <returns></returns>
     public RefitClientCredentialsBuilder AddRefitClient<T>(string? nameOfService = null, Func<IHttpClientBuilder, IHttpClientBuilder>? extra = null) where T : class
     {
+        var apiName = nameOfService ?? typeof(T).Name;
+        var api = clientCredentialsConfig.GetApi(apiName);
+
         var clientBuilder = services.AddRefitClient<T>(refitSettings)
             .ConfigureHttpClient(httpClient =>
             {
-                httpClient.BaseAddress = clientCredentialsConfig.UriToApiByName(nameOfService ?? typeof(T).Name);
+                httpClient.BaseAddress = new Uri(api.Url);
             });
 
         if (!builderOptions.PreserveDefaultLogger)
         {
             clientBuilder.RemoveAllLoggers();
+        }
+
+        if (builderOptions.UseDefaultTokenHandler)
+        {
+            clientBuilder.AddHttpMessageHandler((s) => new HttpAuthHandler(
+                s.GetRequiredService<ITokenStoreResolver>().GetStoreForApi(api)));
         }
 
         foreach (var type in DelegationHandlers)

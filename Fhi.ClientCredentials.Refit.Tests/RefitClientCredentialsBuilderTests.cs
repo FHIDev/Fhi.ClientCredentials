@@ -45,6 +45,7 @@ public partial class RefitClientCredentialsBuilderTests
 
         var config = new ClientCredentialsConfiguration()
         {
+            clientId = "clientId",
             Apis = new List<Api>() { new() { Url = "http://localhost", Name = "ITestClient" } }
         };
 
@@ -58,9 +59,12 @@ public partial class RefitClientCredentialsBuilderTests
             }));
 
         // Add authentication parameters for a logged in user
+        var authStoreProvider = Substitute.For<ITokenStoreResolver>();
         var authStore = Substitute.For<IAuthTokenStore>();
-        authStore.GetToken().Returns(Task.FromResult(AccessTokenValue));
-        services.AddSingleton(authStore);
+        authStoreProvider.GetStoreForApi(Arg.Any<Api>()).Returns(authStore);
+        authStore.GetToken(Arg.Any<HttpMethod>(), Arg.Any<string>())
+            .Returns(Task.FromResult(new JwtAccessToken { AccessToken = AccessTokenValue, TokenType = "Bearer" }));
+        services.AddSingleton(authStoreProvider);
 
         provider = services.BuildServiceProvider();
 

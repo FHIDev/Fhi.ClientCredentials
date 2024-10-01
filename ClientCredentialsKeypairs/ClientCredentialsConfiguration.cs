@@ -14,13 +14,6 @@ public partial class ClientCredentialsConfiguration
     public int RefreshTokenAfterMinutes { get; set; } = 8;
 
     /// <summary>
-    /// DPoP (Demonstrating Proof of Posssession in the Application Layer)
-    /// Must be supported in the receving api.
-    /// https://utviklerportal.nhn.no/informasjonstjenester/helseid/bruksmoenstre-og-eksempelkode/bruk-av-helseid/docs/dpop/dpop_no_nbmd/
-    /// </summary>
-    public bool UseDpop { get; set; } = false;
-
-    /// <summary>
     /// Indicates if authentication towards API-endpoints can fallback
     /// to Bearer tokens in the event they do not support DPoP tokens.
     /// This is to ensure backwards compatibility with existing endpoints
@@ -30,11 +23,8 @@ public partial class ClientCredentialsConfiguration
 
     public List<Api> Apis { get; set; } = new();
 
-    public Uri UriToApiByName(string name)
-    {
-        var url = Apis.FirstOrDefault(o => o.Name == name)?.Url ?? throw new InvalidApiNameException(name); ;
-        return new Uri(url);
-    }
+    public Api GetApi(string apiName) => 
+        Apis.FirstOrDefault(o => o.Name == apiName) ?? throw new InvalidApiNameException($"No API with name {apiName} registered in {nameof(ClientCredentialsConfiguration)}");
 }
 
 public class Api
@@ -48,4 +38,17 @@ public class Api
     /// Actual Url to Api
     /// </summary>
     public string Url { get; set; } = "";
+
+    /// <summary>
+    /// DPoP (Demonstrating Proof of Posssession in the Application Layer)
+    /// Must be supported in the receving api.
+    /// https://utviklerportal.nhn.no/informasjonstjenester/helseid/bruksmoenstre-og-eksempelkode/bruk-av-helseid/docs/dpop/dpop_no_nbmd/
+    /// </summary>
+    public bool UseDpop { get; set; } = false;
+
+    /// <summary>
+    /// The scope that the client will use towards the specific API. Multiple scopes can be set with space after each scope.
+    /// If this property is not set, the scopes defined in the ClientCredentialsConfiguration will be used instead.
+    /// </summary>
+    public string? Scope { get; set; }
 }
