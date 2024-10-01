@@ -1,4 +1,4 @@
-﻿# Whats new in 3.0
+﻿# Whats new in 2.0
 
 ## Breaking changes
 
