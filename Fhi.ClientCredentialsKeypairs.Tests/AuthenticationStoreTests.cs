@@ -35,7 +35,7 @@ public class AuthenticationStoreTests
 
     private AuthenticationStore GetService(bool useDpop)
     {
-        return new AuthenticationStore(new TestAuthenticationService(useDpop), Options.Create(new ClientCredentialsConfiguration()));
+        return new AuthenticationStore(new TestAuthenticationService(useDpop), new ClientCredentialsConfiguration());
     }
 
     private class TestAuthenticationService(bool useDpop) : IAuthenticationService

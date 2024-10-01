@@ -116,6 +116,6 @@ Task<string> GetToken(ClientCredentialsConfiguration config)
 {
 	var api = config.Apis.First();
 	var store = new AuthenticationService(config, api);
-	var tokenProvider = new AuthenticationStore(store, Options.Create(config));
+	var tokenProvider = new AuthenticationStore(store, config);
 	return tokenProvider.GetToken();
 }

@@ -25,6 +25,7 @@ public class RefitClientCredentialsBuilder
         builderOptions = options ?? new RefitClientCredentialsBuilderOptions();
         clientCredentialsConfig = config;
 
+        services.AddSingleton(config);
         services.AddSingleton(builderOptions);
         services.AddSingleton<IAuthTokenStoreFactory, AuthTokenStoreFactory>();
         services.AddSingleton<ITokenStoreResolver, TokenStoreResolver>();

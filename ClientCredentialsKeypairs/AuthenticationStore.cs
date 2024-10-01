@@ -16,9 +16,9 @@ namespace Fhi.ClientCredentialsKeypairs
         private DateTime tokenDateTime;
         private readonly int refreshTokenAfterMinutes;
 
-        public AuthenticationStore(IAuthenticationService authenticationService, IOptions<ClientCredentialsConfiguration> configuration)
+        public AuthenticationStore(IAuthenticationService authenticationService, ClientCredentialsConfiguration configuration)
         {
-            refreshTokenAfterMinutes = configuration.Value.RefreshTokenAfterMinutes;
+            refreshTokenAfterMinutes = configuration.RefreshTokenAfterMinutes;
             this.authenticationService = authenticationService;
             this.tokenDateTime = DateTime.MinValue;
         }

@@ -31,6 +31,7 @@ namespace Fhi.ClientCredentialsKeypairs
             services.AddSingleton<IAuthTokenStoreFactory, AuthTokenStoreFactory>();
             services.AddSingleton<ITokenStoreResolver, TokenStoreResolver>();
             services.AddSingleton<IAuthTokenStore, AuthenticationStore>();
+            services.AddSingleton(clientCredentialsConfiguration);
             services.AddTransient<HttpAuthHandler>();
             return clientCredentialsConfiguration;
         }
