@@ -24,7 +24,7 @@ public partial class ClientCredentialsConfiguration
     public List<Api> Apis { get; set; } = new();
 
     public Api GetApi(string apiName) => 
-        Apis.FirstOrDefault(o => o.Name == apiName) ?? throw new InvalidApiNameException(apiName);
+        Apis.FirstOrDefault(o => o.Name == apiName) ?? throw new InvalidApiNameException($"No API with name {apiName} registered in {nameof(ClientCredentialsConfiguration)}");
 }
 
 public class Api
