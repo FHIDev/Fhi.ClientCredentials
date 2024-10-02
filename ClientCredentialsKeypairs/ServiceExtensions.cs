@@ -46,7 +46,7 @@ namespace Fhi.ClientCredentialsKeypairs
             return jsonSerializerOptions;
         }
 
-        public static IHttpClientBuilder AddDefaultAuthHandler<THandler>(this IHttpClientBuilder builder, Api api)
+        public static IHttpClientBuilder AddDefaultAuthHandler(this IHttpClientBuilder builder, Api api)
         {
             return builder.AddHttpMessageHandler((s) => new HttpAuthHandler(
                 s.GetRequiredService<ITokenStoreResolver>().GetStoreForApi(api)));
