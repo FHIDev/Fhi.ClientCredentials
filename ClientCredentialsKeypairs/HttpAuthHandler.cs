@@ -21,7 +21,9 @@ namespace Fhi.ClientCredentialsKeypairs
         {
             if (request.Options.All(x => x.Key != AnonymousOptionKey))
             {
-                var token = await _authTokenStore.GetToken(request.Method, request.RequestUri?.AbsoluteUri ?? "");
+                var requestUrl = request.RequestUri!.Scheme + "://" + request.RequestUri!.Authority +
+                                 request.RequestUri!.LocalPath;
+                var token = await _authTokenStore.GetToken(request.Method, requestUrl);
                 if (token != null)
                 {
                     if (token.TokenType.ToUpper() == DpopSchemeType.ToUpper())
