@@ -36,6 +36,23 @@ public class HttpAuthHandlerTests
         var response = await client.GetAsync("https://test/");
         response.EnsureSuccessStatusCode();
     }
+    
+    [Test]
+    public async Task DPoPUrlsDoesNotHaveQueryParameters()
+    {
+        var token = new JwtAccessToken()
+        {
+            TokenType = HttpAuthHandler.DpopSchemeType,
+            AccessToken = AuthServerTestHandler.ExpectedJwt
+        };
+
+        var store = Substitute.For<IAuthTokenStore>();
+        var client = CreateClientWithHandler(token, enableDpopOnServer: true, store: store);
+
+        var response = await client.GetAsync("https://test?asdasd");
+        await store.Received().GetToken(HttpMethod.Get, "https://test/");
+        response.EnsureSuccessStatusCode();
+    }
 
     [Test]
     public async Task CannotSendBearerWhenDpop()
@@ -113,9 +130,9 @@ public class HttpAuthHandlerTests
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
     }
 
-    private HttpClient CreateClientWithHandler(JwtAccessToken token, bool enableDpopOnServer)
+    private HttpClient CreateClientWithHandler(JwtAccessToken token, bool enableDpopOnServer, IAuthTokenStore? store = null)
     {
-        var store = Substitute.For<IAuthTokenStore>();
+        store ??= Substitute.For<IAuthTokenStore>();
         store.GetToken(Arg.Any<HttpMethod>(), Arg.Any<string>()).Returns(token);
         var handler = new HttpAuthHandler(store)
         {
