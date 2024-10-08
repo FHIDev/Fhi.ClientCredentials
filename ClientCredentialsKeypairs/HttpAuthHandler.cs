@@ -4,10 +4,7 @@ namespace Fhi.ClientCredentialsKeypairs
 {
     public class HttpAuthHandler : DelegatingHandler
     {
-        public const string AnonymousOptionKey = "Anonymous";
-        public const string BearerSchemeType = "Bearer";
-        public const string DpopSchemeType = "DPoP";
-        public const string DpopHeaderName = "DPoP";
+        private const string AnonymousOptionKey = "Anonymous";
 
         private readonly IAuthTokenStore _authTokenStore;
 
@@ -26,7 +23,7 @@ namespace Fhi.ClientCredentialsKeypairs
                 var token = await _authTokenStore.GetToken(request.Method, requestUrl);
                 if (token != null)
                 {
-                    if (token.TokenType.ToUpper() == DpopSchemeType.ToUpper())
+                    if (token.TokenType.ToUpper() == AuthenticationScheme.Dpop.ToUpper())
                     {
                         return await SendWithDpopAsync(request, cancellationToken, token);
                     }
@@ -46,7 +43,7 @@ namespace Fhi.ClientCredentialsKeypairs
         {
             request.Headers.Authorization = new AuthenticationHeaderValue(token.TokenType, token.AccessToken);
 
-            request.Headers.TryAddWithoutValidation(DpopHeaderName, token.DpopProof);
+            request.Headers.TryAddWithoutValidation(DPoPHeaderNames.DPoP, token.DpopProof);
 
             var dpopResponse = await base.SendAsync(request, cancellationToken);
 
@@ -54,11 +51,11 @@ namespace Fhi.ClientCredentialsKeypairs
             {
                 var supportedSchemes = dpopResponse.Headers.WwwAuthenticate.Select(x => x.Scheme).ToArray();
 
-                if (!supportedSchemes.Contains(DpopSchemeType, StringComparer.InvariantCultureIgnoreCase))
+                if (!supportedSchemes.Contains(AuthenticationScheme.Dpop, StringComparer.InvariantCultureIgnoreCase))
                 {
                     // downgrade request to Dpop if Dpop is not supported
-                    request.Headers.Authorization = new AuthenticationHeaderValue(BearerSchemeType, token.AccessToken);
-                    request.Headers.Remove(DpopHeaderName);
+                    request.Headers.Authorization = new AuthenticationHeaderValue(AuthenticationScheme.Bearer, token.AccessToken);
+                    request.Headers.Remove(AuthenticationScheme.Dpop);
 
                     return await base.SendAsync(request, cancellationToken);
                 }

@@ -2,8 +2,9 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using IdentityModel;
-using IdentityModel.Client;
+using Microsoft.Identity.Client;
+using Microsoft.Identity.Client.Advanced;
+using Microsoft.Identity.Client.Extensibility;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Fhi.ClientCredentialsKeypairs;
@@ -47,38 +48,50 @@ public class AuthenticationService : IAuthenticationService
 
     public async Task SetupToken()
     {
-        var scopes = string.IsNullOrEmpty(Api.Scope) ? Config.Scopes : Api.Scope;
-        var cctr = new ClientCredentialsTokenRequest
-        {
-            Address = Config.Authority,
-            ClientId = Config.ClientId,
-            DPoPProofToken = Api.UseDpop ? BuildDpopAssertion(HttpMethod.Post, Config.Authority) : null,
-            GrantType = OidcConstants.GrantTypes.ClientCredentials,
-            ClientCredentialStyle = ClientCredentialStyle.PostBody,
-            Scope = scopes,
-            ClientAssertion = new ClientAssertion
-            {
-                Type = OidcConstants.ClientAssertionTypes.JwtBearer,
-                Value = BuildClientAssertion(Config.Authority, Config.ClientId)
-            }
-        };
+        var scopeString = string.IsNullOrEmpty(Api.Scope) ? Config.Scopes : Api.Scope;
+        var scopes = scopeString.Split(' ');
+        
+        // Remove /connect/token in case the authority config has this appended
+        var authorityUri = Config.Authority.Replace("/connect/token", "");
+        
+        var confidentialClientApp = ConfidentialClientApplicationBuilder.Create(Config.ClientId)
+            .WithOidcAuthority(authorityUri)
+            .WithClientAssertion((AssertionRequestOptions _) => Task.FromResult(BuildClientAssertion(Config.Authority, Config.ClientId)))
+            .WithExperimentalFeatures()
+            .Build();
 
-        var response = await Client.RequestClientCredentialsTokenAsync(cctr);
-        if (response.IsError)
+        var request = confidentialClientApp.AcquireTokenForClient(scopes);
+        
+        if (Api.UseDpop)
         {
-            if (Api.UseDpop && response.Error == OidcConstants.TokenErrors.UseDPoPNonce)
+            request.WithExtraHttpHeaders(new Dictionary<string, string>
             {
-                cctr.DPoPProofToken = BuildDpopAssertion(HttpMethod.Post, Config.Authority, nonce: response.DPoPNonce ?? Guid.NewGuid().ToString());
-                response = await Client.RequestClientCredentialsTokenAsync(cctr);
-            }
-
-            if (response.IsError)
-            {
-                throw new Exception($"Unable to get access token: {response.Error}");
-            }
+                { DPoPHeaderNames.DPoP, BuildDpopAssertion(HttpMethod.Post, Config.Authority) }
+            }).WithProofOfPosessionKeyId(Guid.NewGuid().ToString(), "DPoP");
         }
 
-        _accessToken = response!.AccessToken ?? "";
+        try
+        {
+            var result = await request
+                .ExecuteAsync();
+
+            _accessToken = result.AccessToken;
+        }
+        catch (MsalServiceException e) when (e.ErrorCode == DPoPErrorCode.UseDPoPNonce)
+        {
+            var nonce = e.Headers.GetValues(DPoPHeaderNames.Nonce).FirstOrDefault() ??
+                        throw new Exception("There must be exactly one value for the DPoP-Nonce header");
+            
+            request.WithExtraHttpHeaders(new Dictionary<string, string>
+            {
+                { DPoPHeaderNames.DPoP, BuildDpopAssertion(HttpMethod.Post, Config.Authority, nonce) }
+            });
+            
+            var result = await request
+                .ExecuteAsync();
+
+            _accessToken = result.AccessToken;
+        }
     }
     
     public JwtAccessToken GetAccessToken(HttpMethod method, string url)
@@ -178,9 +191,9 @@ public class AuthenticationService : IAuthenticationService
     {
         var claims = new List<Claim>
         {
-            new(JwtClaimTypes.Subject, clientId),
-            new(JwtClaimTypes.IssuedAt, DateTimeOffset.Now.ToUnixTimeSeconds().ToString()),
-            new(JwtClaimTypes.JwtId, Guid.NewGuid().ToString("N")),
+            new(JwtRegisteredClaimNames.Sub, clientId),
+            new(JwtRegisteredClaimNames.Iat, DateTimeOffset.Now.ToUnixTimeSeconds().ToString()),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
         };
 
         var signingCredentials = GetClientAssertionSigningCredentials();
