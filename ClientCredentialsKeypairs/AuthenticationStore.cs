@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Options;
-
-namespace Fhi.ClientCredentialsKeypairs
+﻿namespace Fhi.ClientCredentialsKeypairs
 {
     public interface IAuthTokenStore
     {
@@ -10,18 +8,13 @@ namespace Fhi.ClientCredentialsKeypairs
         Task<JwtAccessToken> GetToken(HttpMethod method, string url);
     }
 
-    public class AuthenticationStore : IAuthTokenStore
+    public class AuthenticationStore(
+        IAuthenticationService authenticationService,
+        ClientCredentialsConfiguration configuration)
+        : IAuthTokenStore
     {
-        private readonly IAuthenticationService authenticationService;
-        private DateTime tokenDateTime;
-        private readonly int refreshTokenAfterMinutes;
-
-        public AuthenticationStore(IAuthenticationService authenticationService, ClientCredentialsConfiguration configuration)
-        {
-            refreshTokenAfterMinutes = configuration.RefreshTokenAfterMinutes;
-            this.authenticationService = authenticationService;
-            this.tokenDateTime = DateTime.MinValue;
-        }
+        private DateTime tokenDateTime = DateTime.MinValue;
+        private readonly int refreshTokenAfterMinutes = configuration.RefreshTokenAfterMinutes;
 
         [Obsolete("Use GetToken(HttpMethod method, string url)")]
         public async Task<string> GetToken()

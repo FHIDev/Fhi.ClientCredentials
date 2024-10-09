@@ -12,7 +12,7 @@ public class HttpAuthHandlerTests
     {
         var token = new JwtAccessToken()
         {
-            TokenType = HttpAuthHandler.BearerSchemeType,
+            TokenType = AuthenticationScheme.Bearer,
             AccessToken = AuthServerTestHandler.ExpectedJwt
         };
 
@@ -27,7 +27,7 @@ public class HttpAuthHandlerTests
     {
         var token = new JwtAccessToken()
         {
-            TokenType = HttpAuthHandler.DpopSchemeType,
+            TokenType = AuthenticationScheme.Dpop,
             AccessToken = AuthServerTestHandler.ExpectedJwt
         };
 
@@ -42,7 +42,7 @@ public class HttpAuthHandlerTests
     {
         var token = new JwtAccessToken()
         {
-            TokenType = HttpAuthHandler.DpopSchemeType,
+            TokenType = AuthenticationScheme.Dpop,
             AccessToken = AuthServerTestHandler.ExpectedJwt
         };
 
@@ -59,7 +59,7 @@ public class HttpAuthHandlerTests
     {
         var token = new JwtAccessToken()
         {
-            TokenType = HttpAuthHandler.BearerSchemeType,
+            TokenType = AuthenticationScheme.Bearer,
             AccessToken = AuthServerTestHandler.ExpectedJwt
         };
 
@@ -74,7 +74,7 @@ public class HttpAuthHandlerTests
     {
         var token = new JwtAccessToken()
         {
-            TokenType = HttpAuthHandler.DpopSchemeType,
+            TokenType = AuthenticationScheme.Dpop,
             AccessToken = AuthServerTestHandler.ExpectedJwt,
             CanFallbackToBearerToken = true
         };
@@ -90,7 +90,7 @@ public class HttpAuthHandlerTests
     {
         var token = new JwtAccessToken()
         {
-            TokenType = HttpAuthHandler.BearerSchemeType,
+            TokenType = AuthenticationScheme.Bearer,
             AccessToken = "InvalidToken"
         };
 
@@ -105,7 +105,7 @@ public class HttpAuthHandlerTests
     {
         var token = new JwtAccessToken()
         {
-            TokenType = HttpAuthHandler.DpopSchemeType,
+            TokenType = AuthenticationScheme.Dpop,
             AccessToken = "InvalidToken"
         };
 
@@ -120,7 +120,7 @@ public class HttpAuthHandlerTests
     {
         var token = new JwtAccessToken()
         {
-            TokenType = HttpAuthHandler.DpopSchemeType,
+            TokenType = AuthenticationScheme.Dpop,
             AccessToken = "InvalidToken"
         };
 

@@ -18,15 +18,15 @@ public class AuthServerTestHandler : HttpMessageHandler
         var scheme = authHeaders[0].Split(' ')[0];
         var token = authHeaders[0].Split(' ')[1];
 
-        if (EnableDpop && scheme != HttpAuthHandler.DpopSchemeType)
+        if (EnableDpop && scheme != AuthenticationScheme.Dpop)
         {
             return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.Unauthorized));
         }
 
-        if (!EnableDpop && scheme == HttpAuthHandler.DpopSchemeType)
+        if (!EnableDpop && scheme == AuthenticationScheme.Dpop)
         {
             var resp = new HttpResponseMessage(System.Net.HttpStatusCode.Unauthorized);
-            resp.Headers.Add("WWW-Authenticate", $"{HttpAuthHandler.BearerSchemeType} error='invalid_scheme'");
+            resp.Headers.Add("WWW-Authenticate", $"{AuthenticationScheme.Bearer} error='invalid_scheme'");
             return Task.FromResult(resp);
         }
 

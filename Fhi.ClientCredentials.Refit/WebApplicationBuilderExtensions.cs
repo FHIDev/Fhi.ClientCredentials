@@ -17,7 +17,8 @@ namespace Fhi.ClientCredentials.Refit
         {
             var config = configuration
                 .GetSection(configSection ?? nameof(ClientCredentialsConfiguration))
-                .Get<ClientCredentialsConfiguration>();
+                .Get<ClientCredentialsConfiguration>()
+                         ?? throw new Exception($"No configuration for client credential found in configuration with section name {configSection ?? nameof(ClientCredentialsConfiguration)}");
 
             return AddClientCredentialsRefitBuilder(services, config, builderOptions, refitSettings);
         }
