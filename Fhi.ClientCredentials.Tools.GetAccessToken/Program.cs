@@ -1,7 +1,6 @@
 ﻿using Fhi.ClientCredentialsKeypairs;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.FileSystemGlobbing;
-using Microsoft.Extensions.Options;
 using System.Text.Json;
 
 try
@@ -117,5 +116,7 @@ Task<string> GetToken(ClientCredentialsConfiguration config)
 	var api = config.Apis.First();
 	var store = new AuthenticationService(config, api);
 	var tokenProvider = new AuthenticationStore(store, config);
+#pragma warning disable CS0618 // Type or member is obsolete
 	return tokenProvider.GetToken();
+#pragma warning restore CS0618 // Type or member is obsolete
 }

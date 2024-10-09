@@ -8,7 +8,9 @@ public class AuthenticationStoreTests
     public async Task CanGetLegacyToken()
     {
         var service = GetService(true);
+#pragma warning disable CS0618 // Type or member is obsolete
         var token = await service.GetToken();
+#pragma warning restore CS0618 // Type or member is obsolete
         Assert.That(token, Is.EqualTo("TestToken"));
     }
 

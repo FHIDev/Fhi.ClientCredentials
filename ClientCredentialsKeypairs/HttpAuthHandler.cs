@@ -2,16 +2,9 @@
 
 namespace Fhi.ClientCredentialsKeypairs
 {
-    public class HttpAuthHandler : DelegatingHandler
+    public class HttpAuthHandler(IAuthTokenStore authTokenStore) : DelegatingHandler
     {
         private const string AnonymousOptionKey = "Anonymous";
-
-        private readonly IAuthTokenStore _authTokenStore;
-
-        public HttpAuthHandler(IAuthTokenStore authTokenStore)
-        {
-            _authTokenStore = authTokenStore;
-        }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
             CancellationToken cancellationToken)
@@ -20,18 +13,14 @@ namespace Fhi.ClientCredentialsKeypairs
             {
                 var requestUrl = request.RequestUri!.Scheme + "://" + request.RequestUri!.Authority +
                                  request.RequestUri!.LocalPath;
-                var token = await _authTokenStore.GetToken(request.Method, requestUrl);
-                if (token != null)
+                var token = await authTokenStore.GetToken(request.Method, requestUrl);
+                
+                if (token.TokenType.ToUpper() == AuthenticationScheme.Dpop.ToUpper())
                 {
-                    if (token.TokenType.ToUpper() == AuthenticationScheme.Dpop.ToUpper())
-                    {
-                        return await SendWithDpopAsync(request, cancellationToken, token);
-                    }
-                    else 
-                    {
-                        request.Headers.Authorization = new AuthenticationHeaderValue(token.TokenType, token.AccessToken);
-                    }
+                    return await SendWithDpopAsync(request, cancellationToken, token);
                 }
+
+                request.Headers.Authorization = new AuthenticationHeaderValue(token.TokenType, token.AccessToken);
             }
 
             var response = await base.SendAsync(request, cancellationToken);
@@ -55,7 +44,7 @@ namespace Fhi.ClientCredentialsKeypairs
                 {
                     // downgrade request to Dpop if Dpop is not supported
                     request.Headers.Authorization = new AuthenticationHeaderValue(AuthenticationScheme.Bearer, token.AccessToken);
-                    request.Headers.Remove(AuthenticationScheme.Dpop);
+                    request.Headers.Remove(DPoPHeaderNames.DPoP);
 
                     return await base.SendAsync(request, cancellationToken);
                 }

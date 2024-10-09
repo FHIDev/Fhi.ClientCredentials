@@ -1,7 +1,6 @@
-﻿using IdentityModel;
-using System.IdentityModel.Tokens.Jwt;
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Json;
+using Microsoft.IdentityModel.JsonWebTokens;
 
 namespace Fhi.ClientCredentialsKeypairs.Tests.Mocks;
 
@@ -13,6 +12,11 @@ public class OauthTestServerHandler : HttpMessageHandler
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
+        if (request.RequestUri!.AbsolutePath.EndsWith(".well-known/openid-configuration"))
+        {
+            return CreateResult(new OidcMetadata { TokenEndpoint = "https://test/oauth/token" });
+        }
+        
         var headers = request.Headers
             .SelectMany(x => x.Value.Select(y => new { x.Key, Value = y }))
             .ToDictionary(x => x.Key, x => x.Value);
@@ -26,18 +30,18 @@ public class OauthTestServerHandler : HttpMessageHandler
 
         if (!EnableDpop)
         {
-            return CreateResult(OidcConstants.TokenResponse.AccessToken, "BearerToken");
+            return CreateResult(new TokenResponse { AccessToken = "BearerToken", TokenType = "Bearer"});
         }
 
         if (proof == null)
         {
-            return CreateResult("error", "no dpop proof given");
+            return CreateResult("error", "no dpop proof given", status: HttpStatusCode.BadRequest);
         }
 
         var jti = GetFromJwt(proof, "jti");
         if (string.IsNullOrWhiteSpace(jti))
         {
-            return CreateResult("error", "missig unique jti");
+            return CreateResult("error", "missig unique jti", status: HttpStatusCode.BadRequest);
         }
 
         var givenNonce = GetFromJwt(proof, "nonce");
@@ -46,30 +50,30 @@ public class OauthTestServerHandler : HttpMessageHandler
         {
             var val = Guid.NewGuid().ToString();
             _usedJtis.Add(jti);
-            return CreateResult("error", OidcConstants.TokenErrors.UseDPoPNonce, val);
+            return CreateResult("error", "use_dpop_nonce", val, HttpStatusCode.BadRequest);
         }
 
         // jtis must be unique per call to prevent dpop replay attacks
         if (_usedJtis.Contains(jti))
         {
-            return CreateResult("error", "invalid_nonce");
+            return CreateResult("error", "invalid_nonce", status: HttpStatusCode.BadRequest);
         }
 
         _usedJtis.Add(jti);
 
-        return CreateResult(OidcConstants.TokenResponse.AccessToken, "DpopToken");
+        return CreateResult(new TokenResponse { AccessToken = "DpopToken", TokenType = "DPoP"});
     }
 
     private string? GetFromJwt(string proof, string type)
     {
-        var handler = new JwtSecurityTokenHandler();
-        var jwt = handler.ReadJwtToken(proof);
+        var handler = new JsonWebTokenHandler();
+        var jwt = handler.ReadJsonWebToken(proof);
         return jwt.Claims.FirstOrDefault(x => x.Type == type)?.Value;
     }
 
-    private HttpResponseMessage CreateResult(string key, string value, string? nonce = null)
+    private HttpResponseMessage CreateResult(string key, string value, string? nonce = null, HttpStatusCode status = HttpStatusCode.OK)
     {
-        var response = new HttpResponseMessage(HttpStatusCode.OK);
+        var response = new HttpResponseMessage(status);
 
         response.Content = JsonContent.Create(new Dictionary<string, string>()
         {
@@ -78,9 +82,16 @@ public class OauthTestServerHandler : HttpMessageHandler
 
         if (nonce != null)
         {
-            response.Headers.Add(OidcConstants.HttpHeaders.DPoPNonce, nonce);
+            response.Headers.Add(DPoPHeaderNames.Nonce, nonce);
         }
 
+        return response;
+    }
+    
+    private HttpResponseMessage CreateResult<T>(T obj)
+    {
+        var response = new HttpResponseMessage(HttpStatusCode.OK);
+        response.Content = JsonContent.Create(obj);
         return response;
     }
 }

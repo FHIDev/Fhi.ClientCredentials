@@ -58,6 +58,7 @@ public class AuthenticationService : IAuthenticationService
             .WithOidcAuthority(authorityUri)
             .WithClientAssertion((AssertionRequestOptions _) => Task.FromResult(BuildClientAssertion(Config.Authority, Config.ClientId)))
             .WithExperimentalFeatures()
+            .WithHttpClientFactory(new HttpClientContainer(Client))
             .Build();
 
         var request = confidentialClientApp.AcquireTokenForClient(scopes);
@@ -207,6 +208,11 @@ public class AuthenticationService : IAuthenticationService
     {
         var securityKey = new JsonWebKey(Config.PrivateKey);
         return new SigningCredentials(securityKey, SecurityAlgorithms.RsaSha256);
+    }
+    
+    private class HttpClientContainer(HttpClient client) : IMsalHttpClientFactory
+    {
+        public HttpClient GetHttpClient() => client;
     }
 }
 
