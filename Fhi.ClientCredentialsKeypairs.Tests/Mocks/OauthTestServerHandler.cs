@@ -30,7 +30,7 @@ public class OauthTestServerHandler : HttpMessageHandler
 
         if (!EnableDpop)
         {
-            return CreateResult(new TokenResponse { AccessToken = "BearerToken", TokenType = "Bearer"});
+            return CreateResult(new TokenResponse { AccessToken = "BearerToken", TokenType = AuthenticationScheme.Bearer });
         }
 
         if (proof == null)
@@ -61,7 +61,7 @@ public class OauthTestServerHandler : HttpMessageHandler
 
         _usedJtis.Add(jti);
 
-        return CreateResult(new TokenResponse { AccessToken = "DpopToken", TokenType = "DPoP"});
+        return CreateResult(new TokenResponse { AccessToken = "DpopToken", TokenType = AuthenticationScheme.Dpop});
     }
 
     private string? GetFromJwt(string proof, string type)
