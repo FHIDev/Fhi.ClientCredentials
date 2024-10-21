@@ -81,7 +81,7 @@ public class AuthenticationService : IAuthenticationService
         catch (MsalServiceException e) when (e.ErrorCode == DPoPErrorCode.UseDPoPNonce)
         {
             var nonce = e.Headers.GetValues(DPoPHeaderNames.Nonce).FirstOrDefault() ??
-                        throw new Exception("There must be exactly one value for the DPoP-Nonce header");
+                        throw new DPoPException("There must be exactly one value for the DPoP-Nonce header");
             
             request.WithExtraHttpHeaders(new Dictionary<string, string>
             {
@@ -99,7 +99,7 @@ public class AuthenticationService : IAuthenticationService
     {
         if (string.IsNullOrEmpty(_accessToken))
         {
-            throw new Exception("No access token is set. Unable to create Dpop Proof.");
+            throw new DPoPException("No access token is set. Unable to create Dpop Proof.");
         }
 
         if (!Api.UseDpop)
