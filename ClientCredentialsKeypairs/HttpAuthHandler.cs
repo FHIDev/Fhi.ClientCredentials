@@ -2,19 +2,9 @@
 
 namespace Fhi.ClientCredentialsKeypairs
 {
-    public class HttpAuthHandler : DelegatingHandler
+    public class HttpAuthHandler(IAuthTokenStore authTokenStore) : DelegatingHandler
     {
-        public const string AnonymousOptionKey = "Anonymous";
-        public const string BearerSchemeType = "Bearer";
-        public const string DpopSchemeType = "DPoP";
-        public const string DpopHeaderName = "DPoP";
-
-        private readonly IAuthTokenStore _authTokenStore;
-
-        public HttpAuthHandler(IAuthTokenStore authTokenStore)
-        {
-            _authTokenStore = authTokenStore;
-        }
+        private const string AnonymousOptionKey = "Anonymous";
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
             CancellationToken cancellationToken)
@@ -23,18 +13,14 @@ namespace Fhi.ClientCredentialsKeypairs
             {
                 var requestUrl = request.RequestUri!.Scheme + "://" + request.RequestUri!.Authority +
                                  request.RequestUri!.LocalPath;
-                var token = await _authTokenStore.GetToken(request.Method, requestUrl);
-                if (token != null)
+                var token = await authTokenStore.GetToken(request.Method, requestUrl);
+                
+                if (token.TokenType.ToUpper() == AuthenticationScheme.Dpop.ToUpper())
                 {
-                    if (token.TokenType.ToUpper() == DpopSchemeType.ToUpper())
-                    {
-                        return await SendWithDpopAsync(request, cancellationToken, token);
-                    }
-                    else 
-                    {
-                        request.Headers.Authorization = new AuthenticationHeaderValue(token.TokenType, token.AccessToken);
-                    }
+                    return await SendWithDpopAsync(request, cancellationToken, token);
                 }
+
+                request.Headers.Authorization = new AuthenticationHeaderValue(token.TokenType, token.AccessToken);
             }
 
             var response = await base.SendAsync(request, cancellationToken);
@@ -46,7 +32,7 @@ namespace Fhi.ClientCredentialsKeypairs
         {
             request.Headers.Authorization = new AuthenticationHeaderValue(token.TokenType, token.AccessToken);
 
-            request.Headers.TryAddWithoutValidation(DpopHeaderName, token.DpopProof);
+            request.Headers.TryAddWithoutValidation(DPoPHeaderNames.DPoP, token.DpopProof);
 
             var dpopResponse = await base.SendAsync(request, cancellationToken);
 
@@ -54,11 +40,11 @@ namespace Fhi.ClientCredentialsKeypairs
             {
                 var supportedSchemes = dpopResponse.Headers.WwwAuthenticate.Select(x => x.Scheme).ToArray();
 
-                if (!supportedSchemes.Contains(DpopSchemeType, StringComparer.InvariantCultureIgnoreCase))
+                if (!supportedSchemes.Contains(AuthenticationScheme.Dpop, StringComparer.InvariantCultureIgnoreCase))
                 {
                     // downgrade request to Dpop if Dpop is not supported
-                    request.Headers.Authorization = new AuthenticationHeaderValue(BearerSchemeType, token.AccessToken);
-                    request.Headers.Remove(DpopHeaderName);
+                    request.Headers.Authorization = new AuthenticationHeaderValue(AuthenticationScheme.Bearer, token.AccessToken);
+                    request.Headers.Remove(DPoPHeaderNames.DPoP);
 
                     return await base.SendAsync(request, cancellationToken);
                 }

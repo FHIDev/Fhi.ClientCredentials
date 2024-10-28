@@ -9,7 +9,7 @@ public class ClientCredentialsClientIds : SetupBaseConfigTests
     public ClientCredentialsClientIds(string configFile, AppSettingsUsage useOfAppsettings) : base(configFile, useOfAppsettings)
     {
         ClientCredentialsConfiguration = Config.GetSection(nameof(ClientCredentialsKeypairs.ClientCredentialsConfiguration))
-            .Get<ClientCredentialsConfiguration>();
+            .Get<ClientCredentialsConfiguration>() ?? throw new Exception($"No section with name {nameof(ClientCredentialsKeypairs.ClientCredentialsConfiguration)} found");
     }
 
     protected override void Guard()

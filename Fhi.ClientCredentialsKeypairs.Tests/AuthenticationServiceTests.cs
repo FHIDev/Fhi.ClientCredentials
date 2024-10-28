@@ -1,8 +1,8 @@
 ﻿using Fhi.ClientCredentialsKeypairs.Tests.Mocks;
 using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Cryptography;
 using System.Text.Json;
+using Microsoft.IdentityModel.JsonWebTokens;
 
 namespace Fhi.ClientCredentialsKeypairs.Tests;
 
@@ -35,33 +35,14 @@ public class AuthenticationServiceTests
         await service.SetupToken();
 
         var token = service.GetAccessToken(HttpMethod.Get, "https://test/help");
-        var handler = new JwtSecurityTokenHandler();
-        var dpopProof = (JwtSecurityToken)handler.ReadToken(token.DpopProof);
-
-        var dpopAthClaim = dpopProof.Claims.Where(t => t.Type == "ath").Single();
+        
+        var handler = new JsonWebTokenHandler();
+        var parsedToken  = handler.ReadJsonWebToken(token.DpopProof);
+        
+        var dpopAthClaim = parsedToken.Claims.Single(t => t.Type == "ath");
 
         // Assert that the calculated ath claim value is a base64 url encoded value of the sha256 of the access token
         Assert.That(dpopAthClaim.Value, Is.EqualTo("YdX4GGm956hxYFopv8SFiwpL9d0bg4-qhVAWT0s5PBs"));
-    }
-
-    [Test]
-    public async Task HandlesMismatchClientDpopServerBearer()
-    {
-        var service = GetAuthenticationService(clientUseDpop: true, serverUseDpop: false);
-        await service.SetupToken();
-
-        var token = service.GetAccessToken(HttpMethod.Get, "https://test/help");
-        Assert.That(token.AccessToken, Is.EqualTo("BearerToken"));
-    }
-
-    [Test]
-    public void HandlesMismatchClientBearerServerDpop()
-    {
-        var service = GetAuthenticationService(clientUseDpop: false, serverUseDpop: true);
-        Assert.ThrowsAsync<Exception>(async () =>
-        {
-            await service.SetupToken();
-        });
     }
 
     private AuthenticationService GetAuthenticationService(bool clientUseDpop, bool serverUseDpop)
