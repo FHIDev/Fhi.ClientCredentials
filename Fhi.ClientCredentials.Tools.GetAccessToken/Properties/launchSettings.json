@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "Fhi.ClientCredentials.Tools.GetAccessToken": {
-      "commandName": "Project",
-      "commandLineArgs": ""
-    }
-  }
-}
