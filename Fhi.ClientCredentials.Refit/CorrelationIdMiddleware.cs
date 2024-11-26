@@ -20,7 +20,7 @@ public class CorrelationIdMiddleware
         {
             if (!context.Response.Headers.ContainsKey(CorrelationIdHandler.CorrelationIdHeaderName))
             {
-                context.Response.Headers.Add(CorrelationIdHandler.CorrelationIdHeaderName, correlationId);
+                context.Response.Headers.Append(CorrelationIdHandler.CorrelationIdHeaderName, correlationId);
             }
 
             return Task.CompletedTask;
