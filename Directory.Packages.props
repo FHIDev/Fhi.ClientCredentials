@@ -18,7 +18,7 @@
 		<PackageVersion Include="Refit" Version="8.0.0" />
 		<PackageVersion Include="Refit.HttpClientFactory" Version="8.0.0" />
 
-		<!-- Direct references. These packages must remain in sync. 
+		<!-- Direct references for transitive references. These packages must remain in sync. 
 			 For more information, visit: https://docs.duendesoftware.com/identityserver/v7/troubleshooting/wilson/
 			 or: https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/issues/2514 -->
 		<PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.2.1" />
