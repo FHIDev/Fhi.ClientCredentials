@@ -9,7 +9,7 @@ public class AuthTokenStoreFactoryTests
         // Arrange
         var config = Substitute.For<ClientCredentialsConfiguration>();
         var api = new Api();
-        var factory = new AuthTokenStoreFactory(config);
+        var factory = new AuthTokenStoreFactory(config, new ClientAssertionService());
 
         // Act
         var result = factory.Create(api);
