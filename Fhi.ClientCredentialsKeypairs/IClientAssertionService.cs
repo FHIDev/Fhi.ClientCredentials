@@ -4,14 +4,24 @@ using System.Security.Claims;
 
 namespace Fhi.ClientCredentialsKeypairs
 {
+    /// <summary>
+    /// Genereate client assertion used when getting access token
+    /// </summary>
     public interface IClientAssertionService
     {
-        public Task<string> GetClientAssertionValueAsync(string issuer, string clientId, string privateKey);
+        /// <summary>
+        /// Build jwt client assertion value
+        /// </summary>
+        /// <param name="issuer">token issuer</param>
+        /// <param name="clientId">client id that will be set at jwt issuer</param>
+        /// <param name="privateKey">the key used to sign the jwt</param>
+        /// <returns>jwt string</returns>
+        public Task<string> CreateClientAssertionJwtAsync(string issuer, string clientId, string privateKey);
     }
 
     public class ClientAssertionService : IClientAssertionService
     {
-        public Task<string> GetClientAssertionValueAsync(string issuer, string clientId, string privateKey)
+        public Task<string> CreateClientAssertionJwtAsync(string issuer, string clientId, string privateKey)
         {
             var clientAssertion = BuildClientAssertion(issuer, clientId, privateKey);
 
@@ -21,11 +31,11 @@ namespace Fhi.ClientCredentialsKeypairs
         private string BuildClientAssertion(string issuer, string clientId, string privateKey)
         {
             var claims = new List<Claim>
-        {
-            new(JwtRegisteredClaimNames.Sub, clientId),
-            new(JwtRegisteredClaimNames.Iat, DateTimeOffset.Now.ToUnixTimeSeconds().ToString()),
-            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
-        };
+            {
+                new(JwtRegisteredClaimNames.Sub, clientId),
+                new(JwtRegisteredClaimNames.Iat, DateTimeOffset.Now.ToUnixTimeSeconds().ToString()),
+                new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
+            };
 
             var signingCredentials = GetClientAssertionSigningCredentials(privateKey);
             var payload = new JwtPayload(clientId, issuer, claims, DateTime.UtcNow, DateTime.UtcNow.AddSeconds(60));
@@ -42,6 +52,5 @@ namespace Fhi.ClientCredentialsKeypairs
                 securityKey.Alg = SecurityAlgorithms.RsaSha256;
             return new SigningCredentials(securityKey, securityKey.Alg);
         }
-
     }
 }
