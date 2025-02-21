@@ -15,9 +15,9 @@ public class RefitClientCredentialsBuilder
     private readonly RefitSettings refitSettings;
 
     public RefitClientCredentialsBuilder(
-        IServiceCollection services, 
-        ClientCredentialsConfiguration config, 
-        RefitSettings? refitSettings, 
+        IServiceCollection services,
+        ClientCredentialsConfiguration config,
+        RefitSettings? refitSettings,
         RefitClientCredentialsBuilderOptions? options)
     {
         this.refitSettings = refitSettings ?? CreateRefitSettings();
@@ -27,6 +27,7 @@ public class RefitClientCredentialsBuilder
 
         services.AddSingleton(config);
         services.AddSingleton(builderOptions);
+        services.AddTransient<IClientAssertionService, ClientAssertionService>();
         services.AddSingleton<IAuthTokenStoreFactory, AuthTokenStoreFactory>();
         services.AddSingleton<ITokenStoreResolver, TokenStoreResolver>();
 
