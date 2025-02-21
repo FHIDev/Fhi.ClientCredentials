@@ -6,7 +6,7 @@ namespace Fhi.ClientCredentialsKeypairs
 {
     public interface IClientAssertionService
     {
-        public Task<string> GetClientAssertionValueAsync(string audience, string clientId, string privateKey);
+        public Task<string> GetClientAssertionValueAsync(string issuer, string clientId, string privateKey);
     }
 
     public class ClientAssertionService : IClientAssertionService
