@@ -22,8 +22,6 @@
     <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.5.0" />
     <PackageVersion Include="Microsoft.IdentityModel.Protocols" Version="8.5.0" />
     <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.5.0" />
-	<PackageVersion Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
-	<PackageVersion Include="Swashbuckle.AspNetCore" Version="7.2.0"/>
     <!-- End direct references -->
   </ItemGroup>
 </Project>
