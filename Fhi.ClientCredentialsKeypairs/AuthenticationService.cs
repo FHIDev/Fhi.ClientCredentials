@@ -60,7 +60,7 @@ public class AuthenticationService : IAuthenticationService
 
         var confidentialClientApp = ConfidentialClientApplicationBuilder.Create(Config.ClientId)
             .WithOidcAuthority(authorityUri)
-            .WithClientAssertion((AssertionRequestOptions _) => _clientAssertionService.CreateClientAssertionJwtAsync(Config.Authority, Config.ClientId, Config.PrivateKey))
+            .WithClientAssertion((AssertionRequestOptions _) => _clientAssertionService.CreateClientAssertionJwtAsync(authorityUri, Config.ClientId, Config.PrivateKey))
             .WithExperimentalFeatures()
             .WithHttpClientFactory(new HttpClientContainer(Client))
             .Build();

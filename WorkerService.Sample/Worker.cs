@@ -20,18 +20,14 @@ namespace WorkerService
             var client = _factory.CreateClient("Weather");
             var weatherResponseHttpClient = await client.GetAsync("/WeatherForecast");
             var contentHttpClient = await weatherResponseHttpClient.Content.ReadAsStringAsync();
-            _logger.LogInformation(contentHttpClient);
+            _logger.LogInformation("HttpClient response: " + contentHttpClient);
 
             var weatherResponseRefit = await _weatherForcastApi.GetWeatherForcast();
-            _logger.LogInformation(JsonSerializer.Serialize(weatherResponseRefit.Content));
+            _logger.LogInformation("Refit response:" + JsonSerializer.Serialize(weatherResponseRefit.Content));
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                if (_logger.IsEnabled(LogLevel.Information))
-                {
-                    _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-                }
-                await Task.Delay(1000, stoppingToken);
+                await Task.Delay(2000, stoppingToken);
             }
         }
     }
