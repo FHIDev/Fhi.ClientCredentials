@@ -52,6 +52,7 @@ public class AuthenticationService : IAuthenticationService
 
     public async Task SetupToken()
     {
+        //TODO: authorityUri and authorityUri generation is hack.. should get issuer and tokenuri from discovery endpoint. E.g using duende 
         var scopeString = string.IsNullOrEmpty(Api.Scope) ? Config.Scopes : Api.Scope;
         var scopes = scopeString.Split(' ');
 
@@ -69,9 +70,11 @@ public class AuthenticationService : IAuthenticationService
 
         if (Api.UseDpop)
         {
+            var tokenUri = Config.Authority.Contains("/connect/token") ? Config.Authority : Config.Authority + "/connect/token";
+
             request.WithExtraHttpHeaders(new Dictionary<string, string>
             {
-                { DPoPHeaderNames.DPoP, BuildDpopAssertion(HttpMethod.Post, Config.Authority) }
+                { DPoPHeaderNames.DPoP, BuildDpopAssertion(HttpMethod.Post, tokenUri) }
             }).WithProofOfPosessionKeyId(Guid.NewGuid().ToString(), "DPoP");
         }
 
