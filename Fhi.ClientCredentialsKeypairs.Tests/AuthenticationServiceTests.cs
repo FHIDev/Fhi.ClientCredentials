@@ -1,8 +1,8 @@
 ﻿using Fhi.ClientCredentialsKeypairs.Tests.Mocks;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Cryptography;
 using System.Text.Json;
-using Microsoft.IdentityModel.JsonWebTokens;
 
 namespace Fhi.ClientCredentialsKeypairs.Tests;
 
@@ -35,10 +35,10 @@ public class AuthenticationServiceTests
         await service.SetupToken();
 
         var token = service.GetAccessToken(HttpMethod.Get, "https://test/help");
-        
+
         var handler = new JsonWebTokenHandler();
-        var parsedToken  = handler.ReadJsonWebToken(token.DpopProof);
-        
+        var parsedToken = handler.ReadJsonWebToken(token.DpopProof);
+
         var dpopAthClaim = parsedToken.Claims.Single(t => t.Type == "ath");
 
         // Assert that the calculated ath claim value is a base64 url encoded value of the sha256 of the access token
@@ -59,7 +59,8 @@ public class AuthenticationServiceTests
             authority = "https://test/oauth",
             clientId = "TEST",
             privateJwk = CreateJsonPrivateJwk()
-        }, api);
+        }, api,
+        new ClientAssertionService());
 
         return service;
     }

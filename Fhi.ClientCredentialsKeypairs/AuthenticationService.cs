@@ -1,11 +1,11 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
-using Microsoft.Identity.Client;
+﻿using Microsoft.Identity.Client;
 using Microsoft.Identity.Client.Advanced;
 using Microsoft.Identity.Client.Extensibility;
 using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Fhi.ClientCredentialsKeypairs;
 
@@ -21,24 +21,28 @@ public interface IAuthenticationService
 
 public class AuthenticationService : IAuthenticationService
 {
+
     public ClientCredentialsConfiguration Config { get; }
 
     public HttpClient Client { get; }
 
     public Api Api { get; }
+    private readonly IClientAssertionService _clientAssertionService;
 
-    public AuthenticationService(ClientCredentialsConfiguration config, Api api)
+    public AuthenticationService(ClientCredentialsConfiguration config, Api api, IClientAssertionService clientAssertionService)
     {
         Config = config;
         Client = new HttpClient();
         Api = api;
+        _clientAssertionService = clientAssertionService;
     }
 
-    public AuthenticationService(HttpClient client, ClientCredentialsConfiguration config, Api api)
+    public AuthenticationService(HttpClient client, ClientCredentialsConfiguration config, Api api, IClientAssertionService clientAssertionService)
     {
         Config = config;
         Client = client;
         Api = api;
+        _clientAssertionService = clientAssertionService;
     }
 
     [Obsolete("Use GetAccessToken(HttpMethod method, string url)")]
@@ -48,26 +52,29 @@ public class AuthenticationService : IAuthenticationService
 
     public async Task SetupToken()
     {
+        //TODO: authorityUri and authorityUri generation is hack.. should get issuer and tokenuri from discovery endpoint. E.g using duende 
         var scopeString = string.IsNullOrEmpty(Api.Scope) ? Config.Scopes : Api.Scope;
         var scopes = scopeString.Split(' ');
-        
+
         // Remove /connect/token in case the authority config has this appended
         var authorityUri = Config.Authority.Replace("/connect/token", "");
-        
+
         var confidentialClientApp = ConfidentialClientApplicationBuilder.Create(Config.ClientId)
             .WithOidcAuthority(authorityUri)
-            .WithClientAssertion((AssertionRequestOptions _) => Task.FromResult(BuildClientAssertion(Config.Authority, Config.ClientId)))
+            .WithClientAssertion((AssertionRequestOptions _) => _clientAssertionService.CreateClientAssertionJwtAsync(authorityUri, Config.ClientId, Config.PrivateKey))
             .WithExperimentalFeatures()
             .WithHttpClientFactory(new HttpClientContainer(Client))
             .Build();
 
         var request = confidentialClientApp.AcquireTokenForClient(scopes);
-        
+
         if (Api.UseDpop)
         {
+            var tokenUri = Config.Authority.Contains("/connect/token") ? Config.Authority : Config.Authority + "/connect/token";
+
             request.WithExtraHttpHeaders(new Dictionary<string, string>
             {
-                { DPoPHeaderNames.DPoP, BuildDpopAssertion(HttpMethod.Post, Config.Authority) }
+                { DPoPHeaderNames.DPoP, BuildDpopAssertion(HttpMethod.Post, tokenUri) }
             }).WithProofOfPosessionKeyId(Guid.NewGuid().ToString(), "DPoP");
         }
 
@@ -82,19 +89,19 @@ public class AuthenticationService : IAuthenticationService
         {
             var nonce = e.Headers.GetValues(DPoPHeaderNames.Nonce).FirstOrDefault() ??
                         throw new DPoPException("There must be exactly one value for the DPoP-Nonce header");
-            
+
             request.WithExtraHttpHeaders(new Dictionary<string, string>
             {
                 { DPoPHeaderNames.DPoP, BuildDpopAssertion(HttpMethod.Post, Config.Authority, nonce) }
             });
-            
+
             var result = await request
                 .ExecuteAsync();
 
             _accessToken = result.AccessToken;
         }
     }
-    
+
     public JwtAccessToken GetAccessToken(HttpMethod method, string url)
     {
         if (string.IsNullOrEmpty(_accessToken))
@@ -162,7 +169,8 @@ public class AuthenticationService : IAuthenticationService
             claims.Add(new("nonce", nonce));
         }
 
-        var signingCredentials = GetClientAssertionSigningCredentials();
+        var securityKey = new JsonWebKey(Config.PrivateKey);
+        var signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.RsaSha256);
 
         var jwtSecurityToken = new JwtSecurityToken(claims: claims, signingCredentials: signingCredentials);
         jwtSecurityToken.Header.Remove("typ");
@@ -188,28 +196,6 @@ public class AuthenticationService : IAuthenticationService
         .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
     }
 
-    private string BuildClientAssertion(string audience, string clientId)
-    {
-        var claims = new List<Claim>
-        {
-            new(JwtRegisteredClaimNames.Sub, clientId),
-            new(JwtRegisteredClaimNames.Iat, DateTimeOffset.Now.ToUnixTimeSeconds().ToString()),
-            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
-        };
-
-        var signingCredentials = GetClientAssertionSigningCredentials();
-        var jwtSecurityToken = new JwtSecurityToken(clientId, audience, claims, DateTime.UtcNow, DateTime.UtcNow.AddSeconds(60), signingCredentials);
-
-        var token = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
-        return token;
-    }
-
-    private SigningCredentials GetClientAssertionSigningCredentials()
-    {
-        var securityKey = new JsonWebKey(Config.PrivateKey);
-        return new SigningCredentials(securityKey, SecurityAlgorithms.RsaSha256);
-    }
-    
     private class HttpClientContainer(HttpClient client) : IMsalHttpClientFactory
     {
         public HttpClient GetHttpClient() => client;

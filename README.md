@@ -50,7 +50,7 @@ If no scope is set per API, it will default back to the scopes list set in `Clie
 ```json
   "ClientCredentialsConfiguration": {
     "clientName": "",
-    "authority": "",
+    "authority": "https://helseid-sts.test.nhn.no", //sample of using HelseID test
     "clientId": "",
     "grantTypes": [ "client_credentials" ],
     "scopes": [ ],
@@ -68,8 +68,6 @@ If no scope is set per API, it will default back to the scopes list set in `Clie
     "refreshTokenAfterMinutes":  8  // Set approx 20% less than lifetime of access token
   }
 ```
-
-PS:  Please be aware that the Authority must end with `connect/token`.  
 
 ## Client Credentials using Keypairs
 
