@@ -28,7 +28,6 @@ namespace Fhi.ClientCredentialsKeypairs
                 throw new ConfigurationException("Missing configuration: ClientCredentialsConfiguration");
             services.Configure<ClientCredentialsConfiguration>(configuration.GetSection(nameof(ClientCredentialsConfiguration)));
 
-
             services.AddTransient<IClientAssertionService, ClientAssertionService>();
             services.AddSingleton<IAuthTokenStoreFactory, AuthTokenStoreFactory>();
             services.AddSingleton<ITokenStoreResolver, TokenStoreResolver>();
