@@ -85,7 +85,7 @@ public class AuthenticationService : IAuthenticationService
 
             _accessToken = result.AccessToken;
         }
-        catch (MsalServiceException e) when (e.ErrorCode == DPoPErrorCode.UseDPoPNonce)
+        catch (MsalServiceException e) when (e.Message.Contains(DPoPErrorCode.UseDPoPNonce))
         {
             var nonce = e.Headers.GetValues(DPoPHeaderNames.Nonce).FirstOrDefault() ??
                         throw new DPoPException("There must be exactly one value for the DPoP-Nonce header");
