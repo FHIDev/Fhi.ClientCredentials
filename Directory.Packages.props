@@ -4,9 +4,11 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.15" />
     <PackageVersion Include="Microsoft.AspNetCore.HeaderPropagation" Version="8.0.15" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="9.0.4" />
-    <PackageVersion Include="Microsoft.Extensions.Http" Version="9.0.3" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="9.0.4" />
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="9.0.4" />
     <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.4" />
     <PackageVersion Include="Microsoft.Identity.Client" Version="4.70.1" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
@@ -16,15 +18,13 @@
     <PackageVersion Include="NUnit3TestAdapter" version="5.0.0" />
     <PackageVersion Include="Refit" Version="8.0.0" />
     <PackageVersion Include="Refit.HttpClientFactory" Version="8.0.0" />
+    <PackageVersion Include="Swashbuckle.AspNetCore" Version="8.1.1" />
     <!-- Direct references for transitive references. These packages must remain in sync. 
          For more information, visit: https://docs.duendesoftware.com/identityserver/v7/troubleshooting/wilson/
          or: https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/issues/2514 -->
     <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.8.0" />
     <PackageVersion Include="Microsoft.IdentityModel.Protocols" Version="8.5.0" />
     <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.8.0" />
-    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="9.0.4" />
-    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.15" />
-    <PackageVersion Include="Swashbuckle.AspNetCore" Version="8.1.1" />
     <!-- End direct references -->
   </ItemGroup>
 </Project>
