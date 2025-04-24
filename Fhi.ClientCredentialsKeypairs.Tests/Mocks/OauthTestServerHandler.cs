@@ -1,6 +1,6 @@
-﻿using System.Net;
+﻿using Microsoft.IdentityModel.JsonWebTokens;
+using System.Net;
 using System.Net.Http.Json;
-using Microsoft.IdentityModel.JsonWebTokens;
 
 namespace Fhi.ClientCredentialsKeypairs.Tests.Mocks;
 
@@ -16,7 +16,7 @@ public class OauthTestServerHandler : HttpMessageHandler
         {
             return CreateResult(new OidcMetadata { TokenEndpoint = "https://test/oauth/token" });
         }
-        
+
         var headers = request.Headers
             .SelectMany(x => x.Value.Select(y => new { x.Key, Value = y }))
             .ToDictionary(x => x.Key, x => x.Value);
@@ -50,7 +50,7 @@ public class OauthTestServerHandler : HttpMessageHandler
         {
             var val = Guid.NewGuid().ToString();
             _usedJtis.Add(jti);
-            return CreateResult("error", "use_dpop_nonce", val, HttpStatusCode.BadRequest);
+            return CreateResult("error", "use_dpop_nonce", "error_description", "Missing 'nonce' value.", val, HttpStatusCode.BadRequest);
         }
 
         // jtis must be unique per call to prevent dpop replay attacks
@@ -61,7 +61,7 @@ public class OauthTestServerHandler : HttpMessageHandler
 
         _usedJtis.Add(jti);
 
-        return CreateResult(new TokenResponse { AccessToken = "DpopToken", TokenType = AuthenticationScheme.Dpop});
+        return CreateResult(new TokenResponse { AccessToken = "DpopToken", TokenType = AuthenticationScheme.Dpop });
     }
 
     private string? GetFromJwt(string proof, string type)
@@ -71,13 +71,32 @@ public class OauthTestServerHandler : HttpMessageHandler
         return jwt.Claims.FirstOrDefault(x => x.Type == type)?.Value;
     }
 
-    private HttpResponseMessage CreateResult(string key, string value, string? nonce = null, HttpStatusCode status = HttpStatusCode.OK)
+    private HttpResponseMessage CreateResult(string key, string value, HttpStatusCode status = HttpStatusCode.OK)
     {
         var response = new HttpResponseMessage(status);
 
         response.Content = JsonContent.Create(new Dictionary<string, string>()
         {
             { key, value }
+        });
+
+        return response;
+    }
+
+    private HttpResponseMessage CreateResult(
+        string errorKey,
+        string errorValue,
+        string errorDescriptionKey,
+        string errorDescriptionValue,
+        string? nonce = null,
+        HttpStatusCode status = HttpStatusCode.OK)
+    {
+        var response = new HttpResponseMessage(status);
+
+        response.Content = JsonContent.Create(new Dictionary<string, string>()
+        {
+            { errorKey, errorValue },
+            { errorDescriptionKey, errorDescriptionValue}
         });
 
         if (nonce != null)
@@ -87,7 +106,7 @@ public class OauthTestServerHandler : HttpMessageHandler
 
         return response;
     }
-    
+
     private HttpResponseMessage CreateResult<T>(T obj)
     {
         var response = new HttpResponseMessage(HttpStatusCode.OK);
