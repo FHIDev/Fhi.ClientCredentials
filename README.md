@@ -61,7 +61,7 @@ If no scope is set per API, it will default back to the scopes list set in `Clie
         "Scope": ""
       }
     ],
-    "refreshTokenAfterMinutes":  8  // Set approx 20% less than lifetime of access token. Default 8
+    "refreshTokenAfterMinutes":  8  // Set approx 20% less than lifetime of access token (defaults to 8 minutes if omitted).
   }
 ```
 
