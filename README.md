@@ -52,11 +52,7 @@ If no scope is set per API, it will default back to the scopes list set in `Clie
     "clientName": "",
     "authority": "https://helseid-sts.test.nhn.no", //sample of using HelseID test
     "clientId": "",
-    "grantTypes": [ "client_credentials" ],
     "scopes": [ ],
-    "secretType": "private_key_jwt:RsaPrivateKeyJwtSecret",
-    "rsaPrivateKey": "",
-    "rsaKeySizeBits": 4096,
     "privateJwk": "",
     "Apis": [
       {
@@ -65,7 +61,7 @@ If no scope is set per API, it will default back to the scopes list set in `Clie
         "Scope": ""
       }
     ],
-    "refreshTokenAfterMinutes":  8  // Set approx 20% less than lifetime of access token
+    "refreshTokenAfterMinutes":  8  // Set approx 20% less than lifetime of access token. Default 8
   }
 ```
 
