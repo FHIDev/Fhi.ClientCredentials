@@ -1,4 +1,6 @@
-﻿# Whats new in 2.0
+> NOTE! This repository is archived. In order to use client credential we will move on with using Duende open source and Fhi.AuthExtensions packages samples and extension packages can be found here [Fhi.AuthExtensions](https://github.com/FHIDev/Fhi.AuthExtensions)
+
+# Whats new in 2.0
 
 ## Breaking changes
 
